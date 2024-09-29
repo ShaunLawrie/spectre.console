@@ -48,6 +48,16 @@ internal static class AnsiSequences
         return $"{CSI}{code}J";
     }
 
+    public static string EnterSixelMode()
+    {
+        return $"{ESC}Pq";
+    }
+
+    public static string ExitSixelMode()
+    {
+        return $"{ESC}\\";
+    }
+
     /// <summary>
     /// Moves the cursor up a specified number of lines in the same column.
     /// The cursor stops at the top margin.

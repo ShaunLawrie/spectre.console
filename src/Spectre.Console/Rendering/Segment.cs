@@ -31,6 +31,11 @@ public class Segment
     public bool IsControlCode { get; }
 
     /// <summary>
+    /// Gets a value indicating the width is manually overridden. A workaround for sixel rendering.
+    /// </summary>
+    public int CellWidthOverride { get; }
+
+    /// <summary>
     /// Gets the segment style.
     /// </summary>
     public Style Style { get; }
@@ -48,9 +53,17 @@ public class Segment
     /// <summary>
     /// Creates padding segment.
     /// </summary>
-    /// <param name="size">Number of whitespace characters.</param>
+    /// <param name="size">Number of cursor-right control codes.</param>
     /// <returns>Segment for specified padding size.</returns>
-    public static Segment Padding(int size) => new(new string(' ', size));
+    public static Segment Padding(int size) => new(AnsiSequences.CUF(size), Style.Plain, false, true, size);
+
+    /// <summary>
+    /// Creates a sixel segment, these technically have height but that's handled in the sixel itself.
+    /// </summary>
+    /// <param name="sixel">The segment text.</param>
+    /// <param name="cellWidth">The width in cells.</param>
+    /// <returns>A new instance of the <see cref="Segment"/> class.</returns>
+    public static Segment SixelSegment(string sixel, int cellWidth) => new(sixel, Style.Plain, false, true, cellWidth);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Segment"/> class.
@@ -71,13 +84,14 @@ public class Segment
     {
     }
 
-    private Segment(string text, Style style, bool lineBreak, bool control)
+    private Segment(string text, Style style, bool lineBreak, bool control, int cellWidthOverride = -1)
     {
         Text = text?.NormalizeNewLines() ?? throw new ArgumentNullException(nameof(text));
         Style = style ?? throw new ArgumentNullException(nameof(style));
         IsLineBreak = lineBreak;
         IsWhiteSpace = string.IsNullOrWhiteSpace(text);
         IsControlCode = control;
+        CellWidthOverride = cellWidthOverride;
     }
 
     /// <summary>
@@ -97,6 +111,11 @@ public class Segment
     /// <returns>The number of cells that this segment occupies in the console.</returns>
     public int CellCount()
     {
+        if (CellWidthOverride >= 0)
+        {
+            return CellWidthOverride;
+        }
+
         if (IsControlCode)
         {
             return 0;
