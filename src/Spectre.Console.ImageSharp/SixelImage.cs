@@ -86,9 +86,7 @@ public sealed class SixelImage : Renderable
         var pixelHeight = (int)Math.Round((double)Image.Height / Image.Width * pixelWidth);
         var height = (int)Math.Ceiling((double)(pixelHeight / Compatibility.GetCellSize().PixelHeight));
 
-        // Dump the sixel data, returning cursor to the start position
-        // Spectre Console will know nothing about this... it really should be some kind of segment that can be rendered.
-        // I couldn't see anywhere this would work atm.
+        // Dump the sixel data as a control segment
         var sixelString = SixelParser.ImageToSixel(Image, width);
         var segments = new List<Segment>
         {
@@ -104,6 +102,7 @@ public sealed class SixelImage : Renderable
             Scale = false,
         };
 
+        // TODO remove this, it's for drawing a red and transparent checkerboard pattern to debug sixel positioning
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SPECTRE_CONSOLE_DEBUG")))
         {
             for (var y = 0; y < height; y++)
