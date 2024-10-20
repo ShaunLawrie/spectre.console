@@ -137,7 +137,9 @@ public sealed class Canvas : Renderable
                 }
                 else
                 {
-                    yield return new Segment(pixel);
+                    // "Transparent" pixels are rendered as "cursor right" control codes
+                    // This allows the canvas image to be layered without wiping out the pixels underneath
+                    yield return Segment.Transparent(PixelWidth);
                 }
             }
 

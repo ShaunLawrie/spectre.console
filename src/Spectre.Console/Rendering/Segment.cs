@@ -31,14 +31,14 @@ public class Segment
     public bool IsControlCode { get; }
 
     /// <summary>
-    /// Gets a value indicating the width is manually overridden. A workaround for sixel rendering.
-    /// </summary>
-    public int CellWidthOverride { get; }
-
-    /// <summary>
     /// Gets the segment style.
     /// </summary>
     public Style Style { get; }
+
+    /// <summary>
+    /// Gets the overridden cell size for this segment, some transparent segments may require this e.g. transparent characters.
+    /// </summary>
+    public int? CellCountOverride { get; }
 
     /// <summary>
     /// Gets a segment representing a line break.
@@ -51,19 +51,18 @@ public class Segment
     public static Segment Empty { get; } = new Segment(string.Empty, Style.Plain, false, false);
 
     /// <summary>
-    /// Creates padding segment.
+    /// Gets a transparent segment.
     /// </summary>
-    /// <param name="size">Number of cursor-right control codes.</param>
-    /// <returns>Segment for specified padding size.</returns>
-    public static Segment Padding(int size) => new(AnsiSequences.CUF(size), Style.Plain, false, true, size);
+    /// <param name="size">The size of the transparent segment.</param>
+    /// <returns>A transparent segment.</returns>
+    public static Segment Transparent(int size) => new Segment(AnsiSequences.CUF(size), Style.Plain, false, false, size);
 
     /// <summary>
-    /// Creates a sixel segment, these technically have height but that's handled in the sixel itself.
+    /// Creates padding segment.
     /// </summary>
-    /// <param name="sixel">The segment text.</param>
-    /// <param name="cellWidth">The width in cells.</param>
-    /// <returns>A new instance of the <see cref="Segment"/> class.</returns>
-    public static Segment SixelSegment(string sixel, int cellWidth) => new(sixel, Style.Plain, false, true, cellWidth);
+    /// <param name="size">Number of whitespace characters.</param>
+    /// <returns>Segment for specified padding size.</returns>
+    public static Segment Padding(int size) => new(new string(' ', size));
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Segment"/> class.
@@ -84,14 +83,14 @@ public class Segment
     {
     }
 
-    private Segment(string text, Style style, bool lineBreak, bool control, int cellWidthOverride = -1)
+    private Segment(string text, Style style, bool lineBreak, bool control, int? cellCountOverride = null)
     {
         Text = text?.NormalizeNewLines() ?? throw new ArgumentNullException(nameof(text));
-        Style = style ?? throw new ArgumentNullException(nameof(style));
+        Style = style ?? throw new ArgumentNullException(paramName: nameof(style));
         IsLineBreak = lineBreak;
         IsWhiteSpace = string.IsNullOrWhiteSpace(text);
         IsControlCode = control;
-        CellWidthOverride = cellWidthOverride;
+        CellCountOverride = cellCountOverride;
     }
 
     /// <summary>
@@ -111,9 +110,9 @@ public class Segment
     /// <returns>The number of cells that this segment occupies in the console.</returns>
     public int CellCount()
     {
-        if (CellWidthOverride >= 0)
+        if (CellCountOverride != null)
         {
-            return CellWidthOverride;
+            return CellCountOverride.Value;
         }
 
         if (IsControlCode)
