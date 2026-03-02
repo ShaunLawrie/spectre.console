@@ -136,7 +136,7 @@ public class Segment
     /// <returns>A new segment without any trailing line endings.</returns>
     public Segment StripLineEndings()
     {
-        return new Segment(Text.TrimEnd('\n').TrimEnd('\r'), Style);
+        return new Segment(Text.TrimEnd('\n').TrimEnd('\r'), Style, Link);
     }
 
     /// <summary>
@@ -172,8 +172,8 @@ public class Segment
         }
 
         return (
-            new Segment(Text.Substring(0, index), Style),
-            new Segment(Text.Substring(index, Text.Length - index), Style));
+            new Segment(Text.Substring(0, index), Style, Link),
+            new Segment(Text.Substring(index, Text.Length - index), Style, Link));
     }
 
     /// <summary>
@@ -182,7 +182,7 @@ public class Segment
     /// <returns>A new segment that's identical to this one.</returns>
     public Segment Clone()
     {
-        return new Segment(Text, Style);
+        return new Segment(Text, Style, Link);
     }
 
     /// <summary>
@@ -262,7 +262,7 @@ public class Segment
                     {
                         if (parts[0].Length > 0)
                         {
-                            line.Add(new Segment(parts[0], segment.Style));
+                            line.Add(new Segment(parts[0], segment.Style, segment.Link));
                         }
                     }
 
@@ -341,32 +341,32 @@ public class Segment
             var splitted = SplitSegment(segment.Text, maxWidth);
             foreach (var str in splitted)
             {
-                result.Add(new Segment(str, segment.Style));
+                result.Add(new Segment(str, segment.Style, segment.Link));
             }
         }
         else if (overflow == Overflow.Crop)
         {
             if (maxWidth <= 0)
             {
-                result.Add(new Segment(string.Empty, segment.Style));
+                result.Add(new Segment(string.Empty, segment.Style, segment.Link));
             }
             else
             {
                 var truncated = Truncate(segment, maxWidth);
-                result.Add(truncated ?? new Segment(string.Empty, segment.Style));
+                result.Add(truncated ?? new Segment(string.Empty, segment.Style, segment.Link));
             }
         }
         else if (overflow == Overflow.Ellipsis)
         {
             if (Math.Max(0, maxWidth - 1) == 0)
             {
-                result.Add(new Segment("…", segment.Style));
+                result.Add(new Segment("…", segment.Style, segment.Link));
             }
             else
             {
                 var truncated = Truncate(segment, maxWidth - 1);
                 var prefix = truncated?.Text ?? string.Empty;
-                result.Add(new Segment(prefix + "…", segment.Style));
+                result.Add(new Segment(prefix + "…", segment.Style, segment.Link));
             }
         }
 
@@ -447,7 +447,7 @@ public class Segment
             return null;
         }
 
-        return new Segment(builder.ToString(), segment.Style);
+        return new Segment(builder.ToString(), segment.Style, segment.Link);
     }
 
     internal static IEnumerable<Segment> Merge(IEnumerable<Segment> segments)

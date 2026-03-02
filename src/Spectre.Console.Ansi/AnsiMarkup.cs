@@ -103,6 +103,18 @@ public sealed class AnsiMarkup
             throw new InvalidOperationException("Unbalanced markup stack. Did you forget to close a tag?");
         }
 
+        // Resolve any empty links (bare "link" attribute without "=url")
+        // by using the segment text as the URL, before any downstream
+        // splitting can fragment the text and break the link.
+        for (var i = 0; i < result.Count; i++)
+        {
+            var segment = result[i];
+            if (segment.Link != null && segment.Link.Url.Equals(Constants.EmptyLink))
+            {
+                result[i] = new AnsiMarkupSegment(segment.Text, segment.Style, new Link(segment.Text));
+            }
+        }
+
         return result;
     }
 
